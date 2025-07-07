@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ducati MotoGP - La Légende Rouge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ========== RESET & VARIABLES ========== */
+    :root {
+      --main-red: #D40000;
+      --dark-bg: #0A0A0A;
+      --light-bg: #1A1A1A;
+      --text-color: #FFFFFF;
+      --grey-text: #999999;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background-color: var(--dark-bg);
+      color: var(--text-color);
+      overflow-x: hidden;
+      cursor: none; /* On cache le curseur de base */
+    }
+    a, button {
+      color: var(--text-color);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: none; /* On utilise notre curseur custom */
+    }
+    img { max-width: 100%; display: block; }
+    main { position: relative; width: 100%; }
+
+    /* ========== CURSEUR PERSONNALISÉ ========== */
+    .custom-cursor {
+      position: fixed;
+      width: 25px;
+      height: 25px;
+      border: 2px solid var(--main-red);
+      border-radius: 50%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background-color 0.2s;
+      z-index: 9999;
+    }
+    .custom-cursor.hover { width: 40px; height: 40px; }
+    .custom-cursor.click { background-color: rgba(212, 0, 0, 0.5); }
+    
+    /* ========== HEADER & NAVIGATION ========== */
+    header {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 3rem;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+      z-index: 1000;
+    }
+    .logo { font-size: 2rem; font-weight: 900; color: var(--main-red); }
+    .logo span { color: var(--text-color); font-weight: 700; }
+    nav a {
+      margin-left: 2rem;
+      font-weight: bold;
+      position: relative;
+    }
+    nav a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 3px;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--main-red);
+      transition: width 0.3s ease;
+    }
+    nav a:hover::after, nav a.active::after { width: 100%; }
+    nav a.active { color: var(--main-red); }
+
+    /* ========== SYSTÈME DE PAGES ========== */
+    .page {
+      min-height: 100vh;
+      width: 100%;
+      padding: 8rem 4rem 4rem;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out, visibility 0.6s;
+    }
+    .page.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      position: relative; /* Pour que le main prenne la hauteur de la page active */
+    }
+    .page-title {
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 3rem;
+      color: var(--main-red);
+      text-shadow: 0 0 15px rgba(212, 0, 0, 0.5);
+    }
+
+    /* ========== PAGE: ACCUEIL ========== */
+    #accueil { padding: 0; }
+    .hero-background {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: url('ducati.jpg') center center / cover no-repeat;
+      filter: brightness(0.5);
+      animation: zoomIn 15s infinite alternate;
+    }
+    @keyframes zoomIn { from { transform: scale(1); } to { transform: scale(1.1); } }
+    .hero-content {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .main-title {
+      font-size: 6rem;
+      font-weight: 900;
+      line-height: 1;
+      text-transform: uppercase;
+      color: var(--text-color);
+      text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+    .main-title span { color: var(--main-red); }
+    .hero-content p {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+    }
+    .button-red {
+      background: var(--main-red);
+      color: white;
+      padding: 1rem 2.5rem;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-family: 'Orbitron', sans-serif;
+      margin-top: 2rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .button-red:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px var(--main-red);
+    }
+
+    /* ========== PAGE: PILOTES (FLIP CARDS) ========== */
+    .pilote-container {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      flex-wrap: wrap;
+    }
+    .pilote-card-container {
+      perspective: 1500px;
+      width: 320px;
+      height: 450px;
+    }
+    .pilote-card {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.8s;
+    }
+    .pilote-card-container:hover .pilote-card { transform: rotateY(180deg); }
+    .pilote-card-front, .pilote-card-back {
+      position: absolute;
+      width: 100%; height: 100%;
+      backface-visibility: hidden;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 3px solid var(--main-red);
+      background: var(--light-bg);
+    }
+    .pilote-card-front img { width: 100%; height: 100%; object-fit: cover; }
+    .pilote-name {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+      padding: 2rem 1.5rem 1.5rem;
+      text-align: right;
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .pilote-name span { font-size: 1.2rem; font-weight: 400; color: var(--grey-text); }
+    .pilote-card-back {
+      transform: rotateY(180deg);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .pilote-card-back h3 { color: var(--main-red); text-align: center; font-size: 1.8rem; }
+    .pilote-card-back ul { list-style: none; margin: 1.5rem 0; flex-grow: 1; }
+    .pilote-card-back li { margin-bottom: 1rem; font-size: 1rem; }
+    .pilote-card-back .action-img { width: 100%; border-radius: 10px; height: 150px; object-fit: cover; }
+
+    /* ========== PAGE: MOTO (HOTSPOTS) ========== */
+    .moto-container {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hotspot {
+      position: absolute;
+    }
+    .hotspot-pulse {
+      width: 20px;
+      height: 20px;
+      background: var(--main-red);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .hotspot .tooltip {
+      visibility: hidden; opacity: 0;
+      position: absolute;
+      bottom: 150%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--main-red);
+      width: 250px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    .hotspot:hover .tooltip { visibility: visible; opacity: 1; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(212, 0, 0, 0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(212, 0, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 0, 0, 0); }
+    }
+    .specs {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: var(--light-bg);
+      padding: 2rem;
+      border-radius: 15px;
+      border-left: 5px solid var(--main-red);
+    }
+    .specs h3 { margin-bottom: 1.5rem; color: var(--main-red); }
+    .specs p { margin-bottom: 0.8rem; line-height: 1.6; color: var(--grey-text); }
+    .specs p strong { color: var(--text-color); }
+
+    /* ========== PAGE: HISTOIRE (TIMELINE) ========== */
+    .timeline {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+      padding-left: 40px;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 10px;
+      width: 4px;
+      height: 100%;
+      background: var(--main-red);
+      box-shadow: 0 0 10px var(--main-red);
+    }
+    .event {
+      margin-bottom: 3rem;
+      position: relative;
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity 0.6s, transform 0.6s;
+    }
+    .event.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .event::before {
+      content: "";
+      position: absolute;
+      top: 5px;
+      left: -33px;
+      width: 15px;
+      height: 15px;
+      background: var(--text-color);
+      border-radius: 50%;
+      border: 3px solid var(--main-red);
+    }
+    .event h4 { margin-bottom: 0.5rem; font-size: 1.5rem; color: var(--main-red); }
+    .event p { line-height: 1.6; color: var(--grey-text); }
+
+    /* ========== PAGE: GALERIE (LIGHTBOX) ========== */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .gallery-grid img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .gallery-grid img:hover {
+      transform: scale(1.05);
+      border-color: var(--main-red);
+    }
+    /* Lightbox Styles */
+    .lightbox-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s ease;
+    }
+    .lightbox-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    .lightbox-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 80vh;
+      transform: scale(0.8);
+      transition: transform 0.4s ease;
+    }
+    .lightbox-overlay.visible .lightbox-content {
+      transform: scale(1);
+    }
+    .lightbox-content img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 5px;
+    }
+    .lightbox-caption {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        color: var(--grey-text);
+    }
+    .close-btn {
+      position: absolute;
+      top: -40px; right: 0;
+      font-size: 2.5rem;
+      color: white;
+      background: none;
+      border: none;
+    }
+
+    /* ========== PAGE: CONTACT ========== */
+    .contact-form {
+      max-width: 700px;
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 3rem;
+      border-radius: 15px;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--grey-text);
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 1rem;
+      background: var(--dark-bg);
+      border: 1px solid #333;
+      border-radius: 5px;
+      color: var(--text-color);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--main-red);
+    }
+    .submit-btn {
+      width: 100%;
+    }
+
+    /* ========== RESPONSIVE DESIGN ========== */
+    @media (max-width: 900px) {
+      .page { padding: 8rem 2rem 4rem; }
+      header { padding: 1rem 2rem; }
+      .logo { font-size: 1.5rem; }
+      nav a { margin-left: 1rem; font-size: 0.9rem; }
+      .main-title { font-size: 4rem; }
+    }
+    @media (max-width: 768px) {
+      nav { display: none; } /* Pourrait être remplacé par un menu burger */
+      .pilote-container { flex-direction: column; align-items: center; }
+      .page-title { font-size: 2.5rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="custom-cursor"></div>
+
+  <header>
+    <div class="logo">DUCATI <span>MotoGP</span></div>
+    <nav>
+      <a href="#accueil" class="nav-link active">Accueil</a>
+      <a href="#pilotes" class="nav-link">Pilotes</a>
+      <a href="#moto" class="nav-link">La Moto</a>
+      <a href="#histoire" class="nav-link">Histoire</a>
+      <a href="#galerie" class="nav-link">Galerie</a>
+      <a href="#contact" class="nav-link">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="accueil" class="page active">
+      <div class="hero-background"></div>
+      <div class="hero-content">
+        <h1 class="main-title"><span>DESMOSEDICI</span><br>L'ARME ULTIME</h1>
+        <p>Explorez la synergie parfaite entre l'homme et la machine.</p>
+        <button class="button-red discover-btn" data-target="moto">Découvrir la bête</button>
+      </div>
+    </section>
+
+    <section id="pilotes" class="page">
+      <h2 class="page-title">ÉQUIPE OFFICIELLE 2025</h2>
+      <div class="pilote-container">
+        <div class="pilote-card-container">
+          <div class="pilote-card">
+            <div class="pilote-card-front">
+              <img src="bagnaia.jpeg" alt="Francesco Bagnaia">
+              <div class="pilote-name"><span>Francesco</span><br>Bagnaia</div>
+            </div>
+            <div class="pilote-card-back">
+              <h3>#1 PECCI</h3>
+              <ul>
+                <li>🏆 Champion du Monde 2022, 2023, 2024</li>
+                <li>🏁 Victoires: 21+</li>
+                <li><strong>Style:</strong> Précis, chirurgical</li>
+              </ul>
+              <img src="bagnaia_action" alt="Bagnaia en action" class="action-img">
+            </div>
+          </div>
+        </div>
+        <div class="pilote-card-container">
+          <div class="pilote-card">
+            <div class="pilote-card-front">
+              <img src="marquez.jpeg" alt="Marc Marquez">
+              <div class="pilote-name"><span>Marc</span><br>Marquez</div>
+            </div>
+            <div class="pilote-card-back">
+              <h3>#93 L'ICÔNE</h3>
+              <ul>
+                <li>🏆 8x Champion du Monde</li>
+                <li>🏁 Victoires: 85+</li>
+                <li><strong>Style:</strong> Agressif, spectaculaire</li>
+              </ul>
+              <img src="marquez_action.jpg" alt="Marquez en action" class="action-img">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="moto" class="page">
+        <h2 class="page-title">DESMOSEDICI GP25</h2>
+        <div class="moto-container">
+            <img src="ducati.jpeg" class="moto-img" alt="Moto Ducati MotoGP">
+            <div class="hotspot" style="top: 15%; left: 70%;">
+                <div class="hotspot-pulse"></div>
+                <div class="tooltip"><strong>Aérodynamique:</strong> Des ailerons évolués pour un appui maximal en courbe et une stabilité au freinage.</div>
+            </div>
+            <div class="hotspot" style="top: 55%; left: 48%;">
+                <div class="hotspot-pulse"></div>
+                <div class="tooltip"><strong>Moteur V4:</strong> Plus de 250ch, capable de dépasser les 360 km/h. Le cœur de la bête.</div>
+            </div>
+            <div class="hotspot" style="top: 35%; left: 69%;">
+                <div class="hotspot-pulse"></div>
+                <div class="tooltip"><strong>Ride Height Device:</strong> Système permettant d'abaisser l'arrière de la moto pour optimiser l'accélération en sortie de virage.</div>
+            </div>
+        </div>
+        <div class="specs">
+            <h3>Spécifications Techniques</h3>
+            <p><strong>Moteur:</strong> 4 temps, V4 à 90°, refroidissement liquide, distribution desmodromique, 4 soupapes par cylindre.</p>
+            <p><strong>Puissance:</strong> > 250 CV</p>
+            <p><strong>Vitesse Maximale:</strong> > 360 km/h</p>
+            <p><strong>Châssis:</strong> Double poutre en alliage d'aluminium</p>
+            <p><strong>Freins:</strong> Brembo, double disque carbone à l'avant, disque en acier à l'arrière.</p>
+        </div>
+    </section>
+
+    <section id="histoire" class="page">
+        <h2 class="page-title">UNE HISTOIRE DE VICTOIRES</h2>
+        <div class="timeline">
+          <div class="event">
+            <h4>2003 - Les Débuts Fracassants</h4>
+            <p>Ducati arrive en MotoGP. Loris Capirossi décroche un podium dès la première course et une victoire historique à Barcelone.</p>
+          </div>
+          <div class="event">
+            <h4>2007 - Le Sacre de Stoner</h4>
+            <p>Casey Stoner, au guidon d'une Desmosedici surpuissante, domine la saison et offre à Ducati son premier titre mondial.</p>
+          </div>
+           <div class="event">
+            <h4>2018 - L'Innovation Technologique</h4>
+            <p>Ducati popularise les ailerons et le "Ride Height Device", forçant la concurrence à suivre ses innovations audacieuses.</p>
+          </div>
+          <div class="event">
+            <h4>2022 & 2023 - L'Hégémonie Bagnaia</h4>
+            <p>Francesco Bagnaia remporte deux titres consécutifs, confirmant la domination technique de la Desmosedici moderne.</p>
+          </div>
+          <div class="event">
+            <h4>2025 - Le "Dream Team"</h4>
+            <p>Marc Marquez, octuple champion du monde, rejoint Bagnaia pour former l'une des équipes les plus attendues de l'histoire.</p>
+          </div>
+        </div>
+    </section>
+
+    <section id="galerie" class="page">
+      <h2 class="page-title">GALERIE</h2>
+      <div class="gallery-grid">
+        <img src="bagnaia.jpeg" alt="Francesco Bagnaia Portrait" data-title="Francesco 'Pecco' Bagnaia">
+        <img src="marquez.jpeg" alt="Marc Marquez Portrait" data-title="Marc Marquez">
+        <img src="ducati.jpeg" alt="Ducati Desmosedici" data-title="Ducati Desmosedici GP25">
+        <img src="gallery.jpeg" alt="Image galerie 1" data-title="Ducati en pleine course">
+        <img src="gallery-2.jpg" alt="Image galerie 2" data-title="Célébration de victoire">
+        <img src="gallery-3.jpg" alt="Image galerie 3" data-title="Le team dans les stands">
+        <img src="gallery-4.jpg" alt="Image galerie 4" data-title="Détail de la moto">
+        <img src="gallery-5.jpg" alt="Image galerie 5" data-title="Bagnaia dans un virage">
+        <img src="gallery-6.jpg" alt="Image galerie 6" data-title="Marquez au freinage">
+      </div>
+    </section>
+
+    <section id="contact" class="page">
+      <h2 class="page-title">RESTER CONNECTÉ</h2>
+      <form class="contact-form" id="contact-form">
+        <div class="form-group">
+          <label for="name">Nom</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="button-red submit-btn">Envoyer</button>
+      </form>
+    </section>
+  </main>
+  
+  <div class="lightbox-overlay" id="lightbox">
+    <div class="lightbox-content">
+      <button class="close-btn" id="close-lightbox">&times;</button>
+      <img src="" alt="Image en grand" id="lightbox-img">
+      <div id="lightbox-caption"></div>
+    </div>
+  </div>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // ========== SYSTÈME DE NAVIGATION & PAGES ==========
+      const navLinks = document.querySelectorAll('.nav-link');
+      const pages = document.querySelectorAll('.page');
+      const discoverBtn = document.querySelector('.discover-btn');
+
+      function changePage(targetId) {
+        // Met à jour les pages
+        pages.forEach(page => {
+          page.classList.remove('active');
+          if (page.id === targetId) {
+            page.classList.add('active');
+          }
+        });
+        // Met à jour les liens de navigation
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.hash === '#' + targetId) {
+            link.classList.add('active');
+          }
+        });
+        window.scrollTo(0, 0); // Remonte en haut de la page
+      }
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = e.currentTarget.hash.substring(1);
+          changePage(targetId);
+        });
+      });
+
+      if (discoverBtn) {
+        discoverBtn.addEventListener('click', () => {
+          const targetId = discoverBtn.dataset.target;
+          changePage(targetId);
+        });
+      }
+
+
+      // ========== CURSEUR PERSONNALISÉ ==========
+      const cursor = document.querySelector('.custom-cursor');
+      const hoverElements = document.querySelectorAll('a, button, .pilote-card-container, .hotspot, .gallery-grid img');
+      
+      window.addEventListener('mousemove', e => {
+        cursor.style.top = `${e.clientY}px`;
+        cursor.style.left = `${e.clientX}px`;
+      });
+      
+      hoverElements.forEach(el => {
+          el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+          el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+      });
+      
+      document.addEventListener('mousedown', () => cursor.classList.add('click'));
+      document.addEventListener('mouseup', () => cursor.classList.remove('click'));
+
+
+      // ========== ANIMATION TIMELINE AU DÉFILEMENT ==========
+      const timelineEvents = document.querySelectorAll('.event');
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
+      
+      timelineEvents.forEach(event => {
+        observer.observe(event);
+      });
+
+      // ========== GALERIE LIGHTBOX ==========
+      const galleryImages = document.querySelectorAll('.gallery-grid img');
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+      const lightboxCaption = document.getElementById('lightbox-caption');
+      const closeLightboxBtn = document.getElementById('close-lightbox');
+
+      galleryImages.forEach(img => {
+        img.addEventListener('click', () => {
+          lightbox.classList.add('visible');
+          lightboxImg.src = img.src;
+          lightboxCaption.textContent = img.dataset.title || '';
+        });
+      });
+
+      const closeLightbox = () => {
+        lightbox.classList.remove('visible');
+      }
+
+      closeLightboxBtn.addEventListener('click', closeLightbox);
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      // ========== FORMULAIRE DE CONTACT ==========
+      const contactForm = document.getElementById('contact-form');
+      contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('Merci pour votre message ! La Scuderia vous contactera bientôt.');
+        contactForm.reset();
+      });
+
+    });
+  </script>
+
+</body>
+</html>
